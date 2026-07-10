@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sentinel AI – Autonomous Business Disruption Prevention Platform</title>
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Login Lock Screen Overlay -->
+  <div class="login-screen" id="login-screen">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-logo">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h2 class="login-title">Sentinel AI Portal</h2>
+        <span class="login-subtitle">Identity Verification Required</span>
+      </div>
+      
+      <div class="login-form">
+        <div class="login-error-msg" id="login-error-msg">Invalid SRE Credentials. Please try again.</div>
+        
+        <div class="form-group">
+          <label class="form-label">Enterprise Email</label>
+          <input type="email" class="form-control" id="login-email" placeholder="sre-lead@sentinel.ai">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Access Token / Password</label>
+          <input type="password" class="form-control" id="login-password" placeholder="••••••••">
+        </div>
+        
+        <div class="login-demo-helper" onclick="fillDemoCredentials()">
+          <strong><i class="fa-solid fa-circle-info"></i> Click to Auto-fill Demo SRE Access</strong>
+          <span>User: sre-lead@sentinel.ai | Token: admin</span>
+        </div>
+        
+        <button class="btn btn-primary" style="justify-content: center; height: 42px; font-size: 0.95rem;" onclick="validateSreLogin()">
+          <i class="fa-solid fa-unlock-keyhole"></i> Unlock Console
+        </button>
+      </div>
+      
+      <div class="login-footer-text">
+        Protected by Sentinel AI Security Core. Authorization is audited.
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <span class="brand-name">Sentinel AI</span>
+    </div>
+    
+    <ul class="sidebar-menu">
+      <li class="menu-item active" data-target="dashboard">
+        <a href="#dashboard">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>Dashboard</span>
+        </a>
+      </li>
+      <li class="menu-item" data-target="incidents">
+        <a href="#incidents">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span>Incidents</span>
+        </a>
+      </li>
+      <li class="menu-item" data-target="alerts">
+        <a href="#alerts">
+          <i class="fa-solid fa-bell"></i>
+          <span>Alerts</span>
+        </a>
+      </li>
+      <li class="menu-item" data-target="impact">
+        <a href="#impact">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Business Impact</span>
+        </a>
+      </li>
+      <li class="menu-item" data-target="insights">
+        <a href="#insights">
+          <i class="fa-solid fa-brain"></i>
+          <span>AI Insights</span>
+        </a>
+      </li>
+      <li class="menu-item" data-target="automation">
+        <a href="#automation">
+          <i class="fa-solid fa-gears"></i>
+          <span>Automation</span>
+        </a>
+      </li>
+      <li class="menu-item" data-target="sources">
+        <a href="#sources">
+          <i class="fa-solid fa-database"></i>
+          <span>Data Sources</span>
+        </a>
+      </li>
+      <li class="menu-item" data-target="graph">
+        <a href="#graph">
+          <i class="fa-solid fa-diagram-project"></i>
+          <span>Knowledge Graph</span>
+        </a>
+      </li>
+      <li class="menu-item" data-target="settings">
+        <a href="#settings">
+          <i class="fa-solid fa-sliders"></i>
+          <span>Settings</span>
+        </a>
+      </li>
+    </ul>
+    
+    <div class="sidebar-footer">
+      <span>Sentinel Platform v2.4.1</span>
+    </div>
+  </aside>
+
+  <!-- Main Content Panel -->
+  <main class="main-content">
+    
+    <!-- Top Header -->
+    <header class="header">
+      <div class="header-left">
+        <nav class="breadcrumb-nav">
+          <span>Enterprise Workspace</span>
+          <span class="breadcrumb-separator"><i class="fa-solid fa-chevron-right"></i></span>
+          <span class="breadcrumb-active" id="breadcrumb-current">Dashboard</span>
+        </nav>
+        <span class="live-clock" id="live-clock">Loading Clock...</span>
+      </div>
+      
+      <!-- Global Search Middle Section -->
+      <div class="header-middle">
+        <div class="global-search-wrapper">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" class="global-search-input" id="global-search-input" placeholder="Search global alerts, incidents, systems..." oninput="handleGlobalSearch(this.value)">
+          
+          <!-- Search Results Dropdown -->
+          <div class="search-results-overlay" id="search-results-overlay">
+            <!-- Kategorized matches populated dynamically -->
+          </div>
+        </div>
+      </div>
+      
+      <div class="header-right">
+        <!-- Simulation Toggle Button -->
+        <button class="btn-simulate" id="btn-simulate" onclick="toggleSimulation()">
+          <i class="fa-solid fa-bolt"></i>
+          <span id="simulate-btn-text">Simulate Payment Failure</span>
+        </button>
+        
+        <!-- Notification Bell -->
+        <div class="notification-bell" id="notification-bell-trigger">
+          <i class="fa-regular fa-bell"></i>
+          <span class="bell-badge" id="bell-badge" style="display: none;"></span>
+        </div>
+        
+        <!-- User Profile Dropdown -->
+        <div class="user-profile">
+          <div class="user-avatar">SA</div>
+          <div class="user-info">
+            <span class="user-name">S. Agrawal</span>
+            <span class="user-role">SRE Lead Manager</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page Content View Containers -->
+    <div class="view-container">
+      
+      <!-- 1. DASHBOARD VIEW -->
+      <section class="view-section active" id="view-dashboard">
+        <div class="view-header">
+          <div class="view-title-container">
+            <h2 class="view-title">Operations Reliability Center</h2>
+            <span class="view-subtitle">Real-time enterprise metrics, AI anomaly correlation & remediation dashboard.</span>
+          </div>
+          <div class="view-actions">
+            <button class="btn btn-primary" onclick="explainCurrentFeature('dashboard')">
+              <i class="fa-solid fa-circle-question"></i> Explain Feature
+            </button>
+            <button class="btn" onclick="refreshAllViews()">
+              <i class="fa-solid fa-arrows-rotate"></i> Refresh
+            </button>
+          </div>
+        </div>
+        
+        <!-- Summary Cards Grid -->
+        <div class="metrics-grid" id="dashboard-metrics-grid">
+          <!-- Populated by JavaScript -->
+        </div>
+        
+        <!-- Dashboard Content Grid Rows -->
+        <div class="dashboard-row">
+          <!-- Left: Timeline + Alerts -->
+          <div class="card">
+            <div class="card-title-bar">
+              <span class="card-title"><i class="fa-solid fa-timeline"></i> Real-Time Incident Timeline</span>
+              <span class="badge info">Live Feed</span>
+            </div>
+            <div class="timeline-list" id="timeline-list">
+              <!-- Populated by Javascript -->
+            </div>
+          </div>
+          
+          <!-- Right: Health Gauges & Latency Chart -->
+          <div class="card">
+            <div class="card-title-bar">
+              <span class="card-title"><i class="fa-solid fa-heart-pulse"></i> Business Health Score</span>
+              <span class="badge healthy" id="business-health-badge">98% Stable</span>
+            </div>
+            <div style="display: flex; justify-content: center; align-items: center; height: 180px; position: relative;">
+              <canvas id="chart-health-gauge" style="max-height: 180px; max-width: 180px;"></canvas>
+              <div style="position: absolute; text-align: center; margin-top: 15px;">
+                <span style="font-size: 1.8rem; font-weight: 800; font-family: 'Outfit';" id="health-percentage-display">98%</span>
+                <p style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;">Overall Health</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="dashboard-row-equal">
+          <div class="card">
+            <div class="card-title-bar">
+              <span class="card-title"><i class="fa-solid fa-gauge-high"></i> API Performance & Latency</span>
+              <span class="view-subtitle" id="dashboard-latency-indicator">Avg: 185ms</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-api-latency"></canvas>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-title-bar">
+              <span class="card-title"><i class="fa-solid fa-server"></i> System Status Grid</span>
+              <span class="view-subtitle">10 Monitored Entities</span>
+            </div>
+            <div class="system-grid" id="dashboard-system-grid">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+        
+        <div class="dashboard-grid-three">
+          <!-- Recent Alerts -->
+          <div class="card">
+            <div class="card-title-bar">
+              <span class="card-title"><i class="fa-solid fa-list-check"></i> Recent Correlated Alerts</span>
+            </div>
+            <div style="overflow-y: auto; max-height: 250px;">
+              <table class="custom-table" style="font-size: 0.75rem;">
+                <thead>
+                  <tr>
+                    <th>Alert</th>
+                    <th>Source</th>
+                    <th>Priority</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboard-alerts-tbody">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <!-- AI Recommendations -->
+          <div class="card">
+            <div class="card-title-bar">
+              <span class="card-title"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Recommendations</span>
+            </div>
+            <div class="ai-recommendations-list" id="dashboard-ai-recommendations">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+          
+          <!-- Automation / Executive summary -->
+          <div class="card">
+            <div class="card-title-bar">
+              <span class="card-title"><i class="fa-solid fa-file-contract"></i> Executive Summary</span>
+              <button class="btn btn-sm btn-primary" id="btn-explain-rootcause" onclick="openRootCauseModal()" style="display: none;">
+                <i class="fa-solid fa-diagram-next"></i> Explain Root Cause
+              </button>
+            </div>
+            <div class="executive-summary-text" id="dashboard-executive-summary">
+              All enterprise business endpoints are operating within normal latency SLAs. Active transaction processing is healthy across all nodes.
+            </div>
+            <div style="border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.75rem; color: var(--text-muted);"><i class="fa-solid fa-shield-halved"></i> Guard Shield Active</span>
+              <span class="badge healthy" id="dashboard-automation-status-badge">Auto-mitigation Ready</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. INCIDENTS VIEW -->
+      <section class="view-section" id="view-incidents">
+        <div class="view-header">
+          <div class="view-title-container">
+            <h2 class="view-title">Business Incidents</h2>
+            <span class="view-subtitle">Correlated anomalous events mapping directly to operations and revenue impact.</span>
+          </div>
+          <div class="view-actions">
+            <button class="btn btn-primary" onclick="explainCurrentFeature('incidents')">
+              <i class="fa-solid fa-circle-question"></i> Explain Feature
+            </button>
+            <button class="btn" onclick="exportIncidentReport()">
+              <i class="fa-solid fa-file-export"></i> Export Report
+            </button>
+          </div>
+        </div>
+        
+        <!-- Controls search and filter -->
+        <div class="controls-container">
+          <div class="search-box-wrapper">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" class="search-input" id="incident-search-input" placeholder="Search incidents by ID, title, root cause..." oninput="filterIncidents()">
+          </div>
+          
+          <div class="filters-wrapper">
+            <select class="filter-select" id="incident-filter-severity" onchange="filterIncidents()">
+              <option value="All">All Severities</option>
+              <option value="Critical">Critical</option>
+              <option value="Warning">Warning</option>
+              <option value="Minor">Minor</option>
+            </select>
+            
+            <select class="filter-select" id="incident-filter-service" onchange="filterIncidents()">
+              <option value="All">All Services</option>
+              <option value="Payment">Payment Service</option>
+              <option value="Checkout">Checkout</option>
+              <option value="Database">Database</option>
+              <option value="Inventory">Inventory</option>
+              <option value="CRM">CRM</option>
+              <option value="Logistics">Logistics</option>
+              <option value="Support">Customer Support</option>
+            </select>
+            
+            <select class="filter-select" id="incident-sort" onchange="filterIncidents()">
+              <option value="Newest">Newest First</option>
+              <option value="Severity">Highest Severity</option>
+              <option value="Progress">Resolution Progress</option>
+            </select>
+          </div>
+        </div>
+        
+        <!-- Incidents List Table -->
+        <div class="incidents-table-wrapper">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Incident ID</th>
+                <th>Incident Title</th>
+                <th>Severity</th>
+                <th>Affected Services</th>
+                <th>Revenue Loss</th>
+                <th>Affected Customers</th>
+                <th>Status</th>
+                <th>Resolution Progress</th>
+              </tr>
+            </thead>
+            <tbody id="incidents-tbody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 3. ALERTS VIEW -->
+      <section class="view-section" id="view-alerts">
+        <div class="view-header">
+          <div class="view-title-container">
+            <h2 class="view-title">System Alerts</h2>
+            <span class="view-subtitle">Raw monitoring alerts correlated by Sentinel AI into business incidents.</span>
+          </div>
+          <div class="view-actions">
+            <button class="btn btn-primary" onclick="explainCurrentFeature('alerts')">
+              <i class="fa-solid fa-circle-question"></i> Explain Feature
+            </button>
+          </div>
+        </div>
+        
+        <div class="controls-container">
+          <div class="search-box-wrapper">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" class="search-input" id="alert-search-input" placeholder="Search alerts by source, message, ID..." oninput="filterAlerts()">
+          </div>
+          <div class="filters-wrapper">
+            <select class="filter-select" id="alert-filter-priority" onchange="filterAlerts()">
+              <option value="All">All Priorities</option>
+              <option value="Critical">Critical</option>
+              <option value="Warning">Warning</option>
+              <option value="Info">Info</option>
+            </select>
+            <select class="filter-select" id="alert-filter-correlation" onchange="filterAlerts()">
+              <option value="All">All Correlations</option>
+              <option value="Correlated">Correlated by AI</option>
+              <option value="None">Independent Logs</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="incidents-table-wrapper">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Alert ID</th>
+                <th>Timestamp</th>
+                <th>Priority</th>
+                <th>Source System</th>
+                <th>Message Description</th>
+                <th>Status</th>
+                <th>AI Correlation Status</th>
+              </tr>
+            </thead>
+            <tbody id="alerts-tbody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 4. BUSINESS IMPACT VIEW -->
+      <section class="view-section" id="view-impact">
+        <div class="view-header">
+          <div class="view-title-container">
+            <h2 class="view-title">Business Impact Analysis</h2>
+            <span class="view-subtitle">Visual correlation linking infrastructure telemetry with customer experience & financial risks.</span>
+          </div>
+          <div class="view-actions">
+            <button class="btn btn-primary" onclick="explainCurrentFeature('impact')">
+              <i class="fa-solid fa-circle-question"></i> Explain Feature
+            </button>
+          </div>
+        </div>
+        
+        <div class="metrics-grid" id="impact-metrics-grid">
+          <!-- Populated dynamically -->
+        </div>
+        
+        <div class="dashboard-row-equal">
+          <!-- Revenue Loss Chart -->
+          <div class="card">
+            <div class="card-title-bar">
+              <span class="card-title"><i class="fa-solid fa-indian-rupee-sign"></i> Estimated Revenue Loss Trend</span>
+              <span class="badge critical" id="revenue-loss-trend-badge">Normal Operations</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-revenue-loss"></canvas>
+            </div>
+          </div>
+          
+          <!-- Affected Customers & SLA Violations -->
+          <div class="card">
+            <div class="card-title-bar">
+              <span class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> SLA & Operations Guard</span>
+              <span class="badge healthy" id="sla-status-badge">SLA Compliant</span>
+            </div>
+            <div class="dashboard-row-equal" style="margin-bottom: 0;">
+              <div class="sla-gauge-wrapper">
+                <div class="sla-value-text" id="sla-uptime-percentage">99.98%</div>
+                <div class="sla-label">SLA Uptime Target</div>
+              </div>
+              <div class="sla-gauge-wrapper">
+                <div class="sla-value-text warning" id="sla-failures-count">0</div>
+                <div class="sla-label">Transactions Failed</div>
+              </div>
+            </div>
+            <div style="border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 12px; font-size: 0.75rem; color: var(--text-secondary);">
+              <i class="fa-solid fa-circle-exclamation text-warning"></i> Next SLA boundary evaluation in 4 minutes.
+            </div>
+          </div>
+        </div>
+        
+        <div class="dashboard-row">
+          <!-- Left: Detailed chart grid -->
+          <div class="card">
+            <div class="card-title-bar">
+              <span class="card-title"><i class="fa-solid fa-users-line"></i> Customer Satisfaction & Transaction Health</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-customer-complaints"></canvas>
+            </div>
+          </div>
+          
+          <!-- Right: Regional Impact list -->
+          <div class="card">
+            <div class="card-title-bar">
+              <span class="card-title"><i class="fa-solid fa-globe"></i> Regional Impact Details</span>
+              <span class="view-subtitle">Active user locations</span>
+            </div>
+            <div class="regional-impact-list" id="regional-impact-container">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. AI INSIGHTS VIEW -->
+      <section class="view-section" id="view-insights">
+        <div class="view-header">
+          <div class="view-title-container">
+            <h2 class="view-title">Sentinel AI Insights</h2>
+            <span class="view-subtitle">Root cause reasoning models and predictive business impact forecasts.</span>
+          </div>
+          <div class="view-actions">
+            <button class="btn btn-primary" onclick="explainCurrentFeature('insights')">
+              <i class="fa-solid fa-circle-question"></i> Explain Feature
+            </button>
+            <button class="btn btn-primary" onclick="generateAIReport()">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Generate AI Report
+            </button>
+          </div>
+        </div>
+        
+        <!-- Hero section with confidence -->
+        <div class="ai-insights-hero" id="ai-insights-hero">
+          <div class="ai-hero-details">
+            <div class="ai-hero-badge">
+              <i class="fa-solid fa-robot"></i> AI Engine v3.0 Active
+            </div>
+            <h3 class="ai-hero-title" id="ai-insights-hero-title">Continuous Operational Analysis</h3>
+            <p class="ai-hero-desc" id="ai-insights-hero-desc">The AI is analyzing live system telemetry. No active cascading business deviations detected in transaction flows.</p>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 2.2rem; font-weight: 800; color: var(--status-healthy);" id="ai-confidence-percentage">98%</div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Prediction Confidence</div>
+          </div>
+        </div>
+        
+        <!-- Core insight panels -->
+        <div class="dashboard-row-equal">
+          <div class="card">
+            <div class="card-title-bar">
+              <span class="card-title"><i class="fa-solid fa-magnifying-glass-chart"></i> Cause & Prognosis Summary</span>
+            </div>
+            <div class="detail-grid" style="grid-template-columns: 1fr;">
+              <div class="detail-item">
+                <span class="detail-label">Root Cause Identified</span>
+                <span class="detail-value" id="ai-root-cause-val">Normal background processes. No anomalies detected.</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Expected Recovery Time (ETA)</span>
+                <span class="detail-value" id="ai-recovery-val">0 minutes (System stable)</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Business Summary</span>
+                <span class="detail-value" id="ai-business-summary-val">Transaction health, inventory synchronization, checkout operations, and delivery queues are healthy across all regions.</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-title-bar">
+              <span class="card-title"><i class="fa-solid fa-list-check"></i> Suggested Actions & Forecast</span>
+            </div>
+            <div class="detail-grid" style="grid-template-columns: 1fr;">
+              <div class="detail-item">
+                <span class="detail-label">Technical Analysis</span>
+                <span class="detail-value" id="ai-technical-val">System latency is stable. Network connection limits and CPU loads are within 22% buffer threshold. No active service scaling needed.</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Risk Level</span>
+                <span class="detail-value" id="ai-risk-level-val"><i class="fa-solid fa-circle-check" style="color: var(--status-healthy);"></i> Low (No active threats)</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Mitigation Suggestions</span>
+                <span class="detail-value" id="ai-mitigation-val">Verify scheduled inventory job at 00:00 UTC. Monitor payment gateway API buffer logs.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Generate AI Report Panel -->
+        <div class="ai-explanation-box" id="ai-report-box">
+          <!-- Rendered report output -->
+        </div>
+      </section>
+
+      <!-- 6. AUTOMATION VIEW -->
+      <section class="view-section" id="view-automation">
+        <div class="view-header">
+          <div class="view-title-container">
+            <h2 class="view-title">Automated Remediation</h2>
+            <span class="view-subtitle">Sentinel AI runbooks that execute automated workflows to bypass resource bottlenecks.</span>
+          </div>
+          <div class="view-actions">
+            <button class="btn btn-primary" onclick="explainCurrentFeature('automation')">
+              <i class="fa-solid fa-circle-question"></i> Explain Feature
+            </button>
+          </div>
+        </div>
+        
+        <!-- Remediation Cards Grid -->
+        <div class="automation-grid" id="automation-grid">
+          <!-- Dynamically populated by JS -->
+        </div>
+      </section>
+
+      <!-- 7. DATA SOURCES VIEW -->
+      <section class="view-section" id="view-sources">
+        <div class="view-header">
+          <div class="view-title-container">
+            <h2 class="view-title">Connected Data Sources</h2>
+            <span class="view-subtitle">Enterprise connectors delivering telemetry log, trace, and metric feeds to the AI engine.</span>
+          </div>
+          <div class="view-actions">
+            <button class="btn btn-primary" onclick="explainCurrentFeature('sources')">
+              <i class="fa-solid fa-circle-question"></i> Explain Feature
+            </button>
+            <button class="btn btn-primary" onclick="openAddSourceModal()">
+              <i class="fa-solid fa-plus"></i> Add Data Source
+            </button>
+          </div>
+        </div>
+        
+        <!-- Data Sources Grid -->
+        <div class="sources-grid" id="sources-grid">
+          <!-- Dynamically populated -->
+        </div>
+      </section>
+
+      <!-- 8. KNOWLEDGE GRAPH VIEW -->
+      <section class="view-section" id="view-graph">
+        <div class="view-header">
+          <div class="view-title-container">
+            <h2 class="view-title">Enterprise System Dependencies</h2>
+            <span class="view-subtitle">Real-time dependency topology illustrating telemetry flows and cascading failure risk paths.</span>
+          </div>
+          <div class="view-actions">
+            <button class="btn btn-primary" onclick="explainCurrentFeature('graph')">
+              <i class="fa-solid fa-circle-question"></i> Explain Feature
+            </button>
+          </div>
+        </div>
+        
+        <!-- Dependency Canvas Card -->
+        <div class="card graph-card" style="padding: 0;">
+          <svg class="graph-svg" id="dependency-graph-svg">
+            <!-- Dynamic elements: Lines/Nodes drawn inside JS -->
+          </svg>
+          
+          <!-- Legend Box -->
+          <div class="graph-legend">
+            <div class="legend-item">
+              <div class="legend-dot" style="background-color: var(--status-healthy);"></div>
+              <span>Service Healthy</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background-color: var(--status-warning);"></div>
+              <span>Service Degraded</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background-color: var(--status-critical);"></div>
+              <span>Cascading Outage (Critical)</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-line" style="border-bottom: 2px dashed var(--accent-color);"></div>
+              <span>Healthy Traffic Flow</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-line" style="border-bottom: 2px dashed var(--status-critical);"></div>
+              <span>Error Propagation path</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 9. SETTINGS VIEW -->
+      <section class="view-section" id="view-settings">
+        <div class="view-header">
+          <div class="view-title-container">
+            <h2 class="view-title">Sentinel Configurations</h2>
+            <span class="view-subtitle">Adjust autonomous execution bounds, threshold algorithms, alerts, and access lists.</span>
+          </div>
+          <div class="view-actions">
+            <button class="btn btn-primary" onclick="explainCurrentFeature('settings')">
+              <i class="fa-solid fa-circle-question"></i> Explain Feature
+            </button>
+          </div>
+        </div>
+        
+        <div class="settings-grid">
+          <!-- Card Left -->
+          <div class="settings-card card">
+            <div class="card-title-bar">
+              <span class="card-title"><i class="fa-solid fa-brain"></i> AI Reasoning & Thresholds</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">AI Engine Model</label>
+              <select class="form-control">
+                <option>Sentinel-Reasoning-v3 (Default)</option>
+                <option>Sentinel-FastPredict-v2</option>
+                <option>Custom LLM Endpoint</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Anomaly Sensitivity Threshold</label>
+              <input type="range" min="1" max="100" value="78" class="form-control" style="cursor: pointer;">
+            </div>
+            <div class="switch-group">
+              <div class="switch-info">
+                <span class="switch-title">Auto-correlate alerts</span>
+                <span class="switch-desc">Automatically compile incoming logs into incident models.</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="switch-group">
+              <div class="switch-info">
+                <span class="switch-title">Predictive revenue impact analysis</span>
+                <span class="switch-desc">Calculate financial risk metrics based on operational downtime.</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+          
+          <!-- Card Right -->
+          <div class="settings-card card">
+            <div class="card-title-bar">
+              <span class="card-title"><i class="fa-solid fa-shield-halved"></i> Automated Actions & Notifications</span>
+            </div>
+            <div class="switch-group">
+              <div class="switch-info">
+                <span class="switch-title">Enable Autonomous Mitigation Runbooks</span>
+                <span class="switch-desc">Execute recommended automation scripts without human intervention.</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="settings-enable-automation">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="switch-group">
+              <div class="switch-info">
+                <span class="switch-title">Slack & PagerDuty Notifications</span>
+                <span class="switch-desc">Dispatch critical system alert payloads to developer channels.</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="switch-group">
+              <div class="switch-info">
+                <span class="switch-title">Enable Light Theme</span>
+                <span class="switch-desc">Toggle browser stylesheet mode (Dark Mode is default).</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="settings-light-theme" onchange="toggleLightTheme(this.checked)">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="form-group" style="margin-top: 10px;">
+              <label class="form-label">Escalation Notification Email List</label>
+              <input type="text" class="form-control" value="sre-escalations@enterprise.com">
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ==========================================================================
+     GLOBAL INCIDENTS DETAIL MODAL
+     ========================================================================== */ -->
+  <div class="modal-overlay" id="incident-detail-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-inc-title"><i class="fa-solid fa-triangle-exclamation"></i> Incident Details</h3>
+        <button class="modal-close" onclick="closeIncidentModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-inc-body">
+        <!-- Rendered dynamically -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeIncidentModal()">Close</button>
+        <button class="btn btn-primary" id="modal-inc-run-auto" onclick="runGatewayMitigationFromModal()">Execute Switch Gateway</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+     CASCADING ROOT CAUSE DIAGNOSIS MODAL
+     ========================================================================== */ -->
+  <div class="modal-overlay" id="rootcause-modal">
+    <div class="modal-card" style="max-width: 620px;">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-brain"></i> Sentinel AI Root Cause Diagnosis</h3>
+        <button class="modal-close" onclick="closeRootCauseModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="background-color: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); padding: 14px; border-radius: 8px; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">
+          <strong>Diagnostic Cascade:</strong> Sentinel AI has isolated a cascading dependency path showing 5 inter-linked failures triggered by a single payment edge outage. Run each suggested runbook to restore stability.
+        </div>
+        
+        <div class="rootcause-tree-container" id="rootcause-tree-container">
+          <!-- Populated dynamically by app.js -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeRootCauseModal()">Minimize</button>
+        <button class="btn btn-primary" onclick="executeAllMitigationsAutonomously()">Execute All Runbooks Autonomously</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+     FEATURE EXPLAINER MODAL
+     ========================================================================== */ -->
+  <div class="modal-overlay" id="explainer-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="explainer-title"><i class="fa-solid fa-circle-question"></i> How It Works</h3>
+        <button class="modal-close" onclick="closeExplainerModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="explainer-body" style="font-size: 0.9rem; line-height: 1.6;">
+        <!-- Explainer text loads here -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="closeExplainerModal()">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+     ADD DATA SOURCE MODAL
+     ========================================================================== */ -->
+  <div class="modal-overlay" id="add-source-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-plus"></i> Connect New Data Source</h3>
+        <button class="modal-close" onclick="closeAddSourceModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Data Source Name</label>
+          <input type="text" class="form-control" id="new-source-name" placeholder="e.g. Stripe Gateway, Redis Replica">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category Integration</label>
+          <select class="form-control" id="new-source-category">
+            <option>Payment Gateway</option>
+            <option>Database</option>
+            <option>Cloud Infrastructure</option>
+            <option>Logistics</option>
+            <option>Customer Support</option>
+            <option>Website Analytics</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Collector API Key Integration Token</label>
+          <input type="password" class="form-control" placeholder="••••••••••••••••••••••••••••">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeAddSourceModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitNewSource()">Add Integrator</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+     AUTOMATION RUNBOOK CONFIRMATION MODAL
+     ========================================================================== */ -->
+  <div class="modal-overlay" id="automation-confirm-modal">
+    <div class="modal-card" style="max-width: 460px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="auto-confirm-title">Confirm Automation Execution</h3>
+        <button class="modal-close" onclick="closeAutoConfirmModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="auto-confirm-body" style="font-size: 0.85rem; line-height: 1.5;">
+        <!-- Filled dynamically -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeAutoConfirmModal()">Cancel</button>
+        <button class="btn btn-primary" id="auto-confirm-btn" onclick="executeAutomationFromModal()">Confirm & Execute</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+     SENTINEL AI ASSISTANT CHATBOT INTERFACE
+     ========================================================================== */ -->
+  <div class="chatbot-trigger" id="chatbot-trigger" onclick="toggleChatbot()">
+    <i class="fa-solid fa-comments"></i>
+  </div>
+  
+  <div class="chatbot-panel" id="chatbot-panel">
+    <div class="chatbot-header">
+      <div class="chatbot-brand-info">
+        <div class="chatbot-avatar">
+          <i class="fa-solid fa-robot"></i>
+        </div>
+        <div>
+          <h4 class="chatbot-title">Sentinel AI Assistant</h4>
+          <span class="chatbot-subtitle">AI Operations Manager</span>
+        </div>
+      </div>
+      
+      <div class="chatbot-header-actions">
+        <button class="chatbot-action-btn" title="Clear Chat History" onclick="clearChat()">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+        <button class="chatbot-action-btn" title="Minimize Chat" onclick="toggleChatbot()">
+          <i class="fa-solid fa-minus"></i>
+        </button>
+      </div>
+    </div>
+    
+    <div class="chatbot-messages" id="chatbot-messages-wrapper">
+      <!-- Welcome Message populated by script -->
+    </div>
+    
+    <!-- Suggested Quick Prompts list -->
+    <div class="chatbot-suggested">
+      <span class="suggested-title">Quick Questions</span>
+      <div class="suggested-buttons" id="chatbot-suggested-buttons">
+        <!-- Dynamically written depending on system state -->
+      </div>
+    </div>
+    
+    <!-- Inputs -->
+    <div class="chatbot-input-area">
+      <textarea class="chat-input" id="chatbot-user-input" placeholder="Type an operations query..." onkeydown="handleChatInputKey(event)"></textarea>
+      <button class="btn-chat-send" onclick="sendChatbotMessage()">
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Notification Stack -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
